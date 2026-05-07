@@ -21,6 +21,11 @@ from ._errors import NotFound, OrchestratorAPIError, ServiceUnavailable, Validat
 DEFAULT_BASE_URL = "http://127.0.0.1:8000"
 DEFAULT_TIMEOUT_SECONDS = 30.0
 
+# wait_for_completion polling defaults — shared by sync + async clients.
+DEFAULT_POLL_INTERVAL_SECONDS = 0.5
+DEFAULT_MAX_POLL_INTERVAL_SECONDS = 5.0
+DEFAULT_WAIT_TIMEOUT_SECONDS = 300.0
+
 
 def _user_agent() -> str:
     try:

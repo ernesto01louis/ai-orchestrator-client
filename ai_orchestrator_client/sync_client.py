@@ -19,7 +19,10 @@ import httpx
 from ._auth import AuthProvider
 from ._base import (
     DEFAULT_BASE_URL,
+    DEFAULT_MAX_POLL_INTERVAL_SECONDS,
+    DEFAULT_POLL_INTERVAL_SECONDS,
     DEFAULT_TIMEOUT_SECONDS,
+    DEFAULT_WAIT_TIMEOUT_SECONDS,
     default_headers,
     normalize_base_url,
     raise_for_status,
@@ -31,10 +34,6 @@ from .models import (
     RunStatus,
     RunVerifyResult,
 )
-
-DEFAULT_POLL_INTERVAL_SECONDS = 0.5
-DEFAULT_MAX_POLL_INTERVAL_SECONDS = 5.0
-DEFAULT_WAIT_TIMEOUT_SECONDS = 300.0
 
 
 class OrchestratorClient:
