@@ -23,6 +23,7 @@ from .models import (
     CampaignTreeRun,
     CampaignTreeView,
     CampaignVerifyResult,
+    LogEvent,
     ManifestStatus,
     OrchestrateAck,
     OrchestrateRequest,
@@ -31,6 +32,7 @@ from .models import (
     RunPhase,
     RunStatus,
     RunVerifyResult,
+    StatusEvent,
 )
 from .sync_client import OrchestratorClient
 
@@ -64,6 +66,7 @@ __all__ = [
     "CampaignTreeRun",
     "CampaignTreeView",
     "CampaignVerifyResult",
+    "LogEvent",
     "ManifestStatus",
     "OrchestrateAck",
     "OrchestrateRequest",
@@ -72,4 +75,5 @@ __all__ = [
     "RunStatus",
     "RunVerifyResult",
     "RunningResult",
+    "StatusEvent",
 ]

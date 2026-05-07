@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import AsyncIterator
 from types import TracebackType
 from typing import Any
 
@@ -39,10 +40,12 @@ from .models import (
     CampaignCreate,
     CampaignTreeView,
     CampaignVerifyResult,
+    LogEvent,
     OrchestrateAck,
     OrchestrateRequest,
     RunStatus,
     RunVerifyResult,
+    StatusEvent,
 )
 
 
@@ -227,6 +230,47 @@ class AsyncOrchestratorClient:
             )
         ).json()
         return result
+
+    # ----- WebSocket log streaming (Phase F) -------------------------
+
+    def iter_logs(
+        self,
+        run_id: str,
+        *,
+        include_status: bool = False,
+        reconnect_once: bool = True,
+    ) -> AsyncIterator[LogEvent | StatusEvent]:
+        """Stream live log lines (and optionally status updates) for a run.
+
+        Connects to ``/ws``, filters broadcasts by ``run_id``, and yields
+        typed :class:`LogEvent` (always) plus :class:`StatusEvent` (only
+        when ``include_status=True``). Iteration terminates on the first
+        status event with ``completed=True`` — a streaming-style
+        complement to :meth:`wait_for_completion`.
+
+        The orchestrator broadcasts /ws frames globally (no per-run
+        subscription on the wire), so this method filters client-side.
+        Unrelated traffic is received and discarded — prefer polling
+        for high-volume deployments.
+
+        Reconnects once on a transient :class:`ConnectionClosed`; the
+        server does NOT replay broadcast history, so events emitted
+        during the disconnect window are lost. The SDK does not
+        deduplicate. The second close propagates.
+
+        Auth headers from the configured :class:`AuthProvider` are
+        passed via WS ``additional_headers`` (Phase 1.7 compat).
+        """
+        from ._ws import stream_ws_events
+
+        auth_headers = self._auth.get_headers() if self._auth is not None else None
+        return stream_ws_events(
+            self._base_url,
+            run_id=run_id,
+            auth_headers=auth_headers,
+            include_status=include_status,
+            reconnect_once=reconnect_once,
+        )
 
     # ----- wait_for_completion ----------------------------------------
 

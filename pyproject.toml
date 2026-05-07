@@ -25,7 +25,7 @@ classifiers = [
 dependencies = [
     "httpx>=0.28,<0.29",
     "pydantic>=2.7",
-    "websockets>=12,<14",
+    "websockets>=13,<14",
 ]
 
 [project.optional-dependencies]

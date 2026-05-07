@@ -18,6 +18,7 @@ from .campaign import (
     CampaignTreeRun,
     CampaignTreeView,
 )
+from .events import LogEvent, StatusEvent
 from .orchestrate import (
     OrchestrateAck,
     OrchestrateRequest,
@@ -39,6 +40,7 @@ __all__ = [
     "CampaignTreeRun",
     "CampaignTreeView",
     "CampaignVerifyResult",
+    "LogEvent",
     "ManifestStatus",
     "OrchestrateAck",
     "OrchestrateRequest",
@@ -47,4 +49,5 @@ __all__ = [
     "RunStatus",
     "RunVerifyResult",
     "RunningResult",
+    "StatusEvent",
 ]
