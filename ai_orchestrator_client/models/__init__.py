@@ -1,31 +1,34 @@
-"""ai-orchestrator-client — Python SDK for the AI Orchestrator HTTP API."""
+"""Wire-compatible Pydantic mirrors of the orchestrator's HTTP contract.
 
-from .models import (
+Mirrors are hand-written rather than generated from /openapi.json — server
+schemas use ad-hoc dicts for response envelopes that openapi-codegen would
+miss. A drift check (tests/test_openapi_drift.py) protects the request/CRUD
+schemas (OrchestrateRequest, CampaignCreate, CampaignTemplate) by comparing
+against a captured fixture; response envelopes are validated by round-trip
+tests instead.
+"""
+
+from .campaign import (
     Campaign,
     CampaignAck,
     CampaignControlAck,
     CampaignCreate,
     CampaignRun,
-    CampaignStatus,
     CampaignTemplate,
     CampaignTreeRun,
     CampaignTreeView,
-    CampaignVerifyResult,
-    ManifestStatus,
+)
+from .orchestrate import (
     OrchestrateAck,
     OrchestrateRequest,
     OrchestrateResult,
     RunningResult,
-    RunPhase,
     RunStatus,
-    RunVerifyResult,
 )
-
-__version__ = "0.0.0"
+from .status import CampaignStatus, ManifestStatus, RunPhase
+from .verify import CampaignVerifyResult, RunVerifyResult
 
 __all__ = [
-    "__version__",
-    # models
     "Campaign",
     "CampaignAck",
     "CampaignControlAck",
