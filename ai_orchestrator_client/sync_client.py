@@ -29,6 +29,12 @@ from ._base import (
 )
 from ._errors import RunFailed, WaitInterrupted, WaitTimeout
 from .models import (
+    Campaign,
+    CampaignAck,
+    CampaignControlAck,
+    CampaignCreate,
+    CampaignTreeView,
+    CampaignVerifyResult,
     OrchestrateAck,
     OrchestrateRequest,
     RunStatus,
@@ -177,6 +183,71 @@ class OrchestratorClient:
         """Return the tail of the orchestrator's run log as plain text."""
         resp = self._request("GET", f"/logs/{run_id}/tail")
         return resp.text
+
+    # ----- campaign lifecycle -----------------------------------------
+
+    def start_campaign(self, req: CampaignCreate) -> CampaignAck:
+        """Submit a campaign (parameter sweep). Returns immediately with id."""
+        resp = self._request(
+            "POST", "/campaigns", json=req.model_dump(exclude_none=False)
+        )
+        return CampaignAck.model_validate(resp.json())
+
+    def list_campaigns(self) -> list[dict[str, Any]]:
+        """Server-side summary list (id, name, status, run_count, mean_score, ...)."""
+        body: dict[str, Any] = self._request("GET", "/campaigns").json()
+        items = body.get("campaigns", []) if isinstance(body, dict) else body
+        result: list[dict[str, Any]] = list(items)
+        return result
+
+    def get_campaign(self, campaign_id: str) -> Campaign:
+        """Full campaign record from /campaigns/{id}."""
+        resp = self._request("GET", f"/campaigns/{campaign_id}")
+        return Campaign.model_validate(resp.json())
+
+    def get_campaign_tree(self, campaign_id: str) -> CampaignTreeView:
+        """Tree view: campaign + per-run live phase merged from RUN_STATUS."""
+        resp = self._request("GET", f"/campaigns/{campaign_id}/tree")
+        return CampaignTreeView.model_validate(resp.json())
+
+    def pause_campaign(self, campaign_id: str) -> CampaignControlAck:
+        resp = self._request("POST", f"/campaigns/{campaign_id}/pause")
+        return CampaignControlAck.model_validate(resp.json())
+
+    def resume_campaign(self, campaign_id: str) -> CampaignControlAck:
+        resp = self._request("POST", f"/campaigns/{campaign_id}/resume")
+        return CampaignControlAck.model_validate(resp.json())
+
+    def abort_campaign(self, campaign_id: str) -> CampaignControlAck:
+        """Best-effort: stops new runs spawning; in-flight runs continue (Prefect)."""
+        resp = self._request("POST", f"/campaigns/{campaign_id}/abort")
+        return CampaignControlAck.model_validate(resp.json())
+
+    def verify_campaign_merkle(self, campaign_id: str) -> CampaignVerifyResult:
+        """Re-validate the campaign Merkle root (Phase 1.5 orchestrator surface)."""
+        resp = self._request("GET", f"/campaigns/{campaign_id}/verify-merkle")
+        return CampaignVerifyResult.model_validate(resp.json())
+
+    # ----- evidence (Phase 1.2 orchestrator surface) -----------------
+
+    def get_evidence(self, campaign_id: str) -> dict[str, Any]:
+        """Full evidence-bundle JSON for a campaign."""
+        result: dict[str, Any] = self._request(
+            "GET", f"/campaigns/{campaign_id}/evidence"
+        ).json()
+        return result
+
+    def download_evidence_crate(self, campaign_id: str) -> bytes:
+        """Download the RO-Crate ZIP. Returns the raw bytes for caller to write."""
+        resp = self._request("GET", f"/campaigns/{campaign_id}/evidence.crate.zip")
+        return resp.content
+
+    def refresh_evidence(self, campaign_id: str) -> dict[str, Any]:
+        """Force-rebuild the evidence bundle (e.g. after a calculator plugin lands)."""
+        result: dict[str, Any] = self._request(
+            "POST", f"/campaigns/{campaign_id}/evidence/refresh"
+        ).json()
+        return result
 
     # ----- wait_for_completion ----------------------------------------
 

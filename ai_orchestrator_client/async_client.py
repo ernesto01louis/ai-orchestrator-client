@@ -33,6 +33,12 @@ from ._base import (
 )
 from ._errors import RunFailed, WaitInterrupted, WaitTimeout
 from .models import (
+    Campaign,
+    CampaignAck,
+    CampaignControlAck,
+    CampaignCreate,
+    CampaignTreeView,
+    CampaignVerifyResult,
     OrchestrateAck,
     OrchestrateRequest,
     RunStatus,
@@ -159,6 +165,68 @@ class AsyncOrchestratorClient:
         """Return the tail of the orchestrator's run log as plain text."""
         resp = await self._request("GET", f"/logs/{run_id}/tail")
         return resp.text
+
+    # ----- campaign lifecycle -----------------------------------------
+
+    async def start_campaign(self, req: CampaignCreate) -> CampaignAck:
+        """Submit a campaign (parameter sweep). Returns immediately with id."""
+        resp = await self._request(
+            "POST", "/campaigns", json=req.model_dump(exclude_none=False)
+        )
+        return CampaignAck.model_validate(resp.json())
+
+    async def list_campaigns(self) -> list[dict[str, Any]]:
+        body: dict[str, Any] = (await self._request("GET", "/campaigns")).json()
+        items = body.get("campaigns", []) if isinstance(body, dict) else body
+        result: list[dict[str, Any]] = list(items)
+        return result
+
+    async def get_campaign(self, campaign_id: str) -> Campaign:
+        resp = await self._request("GET", f"/campaigns/{campaign_id}")
+        return Campaign.model_validate(resp.json())
+
+    async def get_campaign_tree(self, campaign_id: str) -> CampaignTreeView:
+        resp = await self._request("GET", f"/campaigns/{campaign_id}/tree")
+        return CampaignTreeView.model_validate(resp.json())
+
+    async def pause_campaign(self, campaign_id: str) -> CampaignControlAck:
+        resp = await self._request("POST", f"/campaigns/{campaign_id}/pause")
+        return CampaignControlAck.model_validate(resp.json())
+
+    async def resume_campaign(self, campaign_id: str) -> CampaignControlAck:
+        resp = await self._request("POST", f"/campaigns/{campaign_id}/resume")
+        return CampaignControlAck.model_validate(resp.json())
+
+    async def abort_campaign(self, campaign_id: str) -> CampaignControlAck:
+        """Best-effort: stops new runs spawning; in-flight runs continue (Prefect)."""
+        resp = await self._request("POST", f"/campaigns/{campaign_id}/abort")
+        return CampaignControlAck.model_validate(resp.json())
+
+    async def verify_campaign_merkle(self, campaign_id: str) -> CampaignVerifyResult:
+        resp = await self._request("GET", f"/campaigns/{campaign_id}/verify-merkle")
+        return CampaignVerifyResult.model_validate(resp.json())
+
+    # ----- evidence (Phase 1.2 orchestrator surface) -----------------
+
+    async def get_evidence(self, campaign_id: str) -> dict[str, Any]:
+        result: dict[str, Any] = (
+            await self._request("GET", f"/campaigns/{campaign_id}/evidence")
+        ).json()
+        return result
+
+    async def download_evidence_crate(self, campaign_id: str) -> bytes:
+        resp = await self._request(
+            "GET", f"/campaigns/{campaign_id}/evidence.crate.zip"
+        )
+        return resp.content
+
+    async def refresh_evidence(self, campaign_id: str) -> dict[str, Any]:
+        result: dict[str, Any] = (
+            await self._request(
+                "POST", f"/campaigns/{campaign_id}/evidence/refresh"
+            )
+        ).json()
+        return result
 
     # ----- wait_for_completion ----------------------------------------
 
