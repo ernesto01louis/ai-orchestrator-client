@@ -7,11 +7,29 @@ GET /campaigns/{id}/tree, POST /campaigns/{id}/{pause,resume,abort}).
 """
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any, overload
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from .status import CampaignStatus
+
+if TYPE_CHECKING:
+    from .._base import (
+        DEFAULT_MAX_POLL_INTERVAL_SECONDS as _DEFAULT_MAX_POLL,
+    )
+    from .._base import (
+        DEFAULT_POLL_INTERVAL_SECONDS as _DEFAULT_POLL,
+    )
+    from ..async_client import AsyncOrchestratorClient
+    from ..sync_client import OrchestratorClient
+else:
+    from .._base import (
+        DEFAULT_MAX_POLL_INTERVAL_SECONDS as _DEFAULT_MAX_POLL,
+    )
+    from .._base import (
+        DEFAULT_POLL_INTERVAL_SECONDS as _DEFAULT_POLL,
+    )
 
 
 class CampaignTemplate(BaseModel):
@@ -79,6 +97,67 @@ class Campaign(CampaignCreate):
     created_at: str
     updated_at: str
     completed_at: str | None = None
+
+    @overload
+    def iter_runs(
+        self,
+        client: OrchestratorClient,
+        *,
+        poll_interval_seconds: float = ...,
+        max_poll_interval_seconds: float = ...,
+    ) -> Iterator[CampaignTreeRun]: ...
+
+    @overload
+    def iter_runs(
+        self,
+        client: AsyncOrchestratorClient,
+        *,
+        poll_interval_seconds: float = ...,
+        max_poll_interval_seconds: float = ...,
+    ) -> AsyncIterator[CampaignTreeRun]: ...
+
+    def iter_runs(
+        self,
+        client: OrchestratorClient | AsyncOrchestratorClient,
+        *,
+        poll_interval_seconds: float = _DEFAULT_POLL,
+        max_poll_interval_seconds: float = _DEFAULT_MAX_POLL,
+    ) -> Iterator[CampaignTreeRun] | AsyncIterator[CampaignTreeRun]:
+        """Stream :class:`CampaignTreeRun` rows as they appear server-side.
+
+        Solves the empty-``runs[]`` race after ``start_campaign`` (server
+        writes the campaign record before its runner thread has populated
+        any combos): polls /campaigns/{id}/tree, yielding each run id the
+        first time it appears, and only terminates when the campaign
+        reached a terminal status AND the most recent poll yielded zero
+        new run ids.
+
+        Dispatches on ``client`` type — passes a sync client returns a
+        generator, an async client returns an async generator. Use::
+
+            for run in campaign.iter_runs(sync_client):
+                ...
+
+            async for run in campaign.iter_runs(async_client):
+                ...
+        """
+        # Lazy imports to dodge the circular dependency with the client modules.
+        from ..async_client import AsyncOrchestratorClient as _AC
+        from ..streaming import _iter_runs_async, _iter_runs_sync
+
+        if isinstance(client, _AC):
+            return _iter_runs_async(
+                client,
+                self.id,
+                poll_interval_seconds=poll_interval_seconds,
+                max_poll_interval_seconds=max_poll_interval_seconds,
+            )
+        return _iter_runs_sync(
+            client,
+            self.id,
+            poll_interval_seconds=poll_interval_seconds,
+            max_poll_interval_seconds=max_poll_interval_seconds,
+        )
 
 
 class CampaignAck(BaseModel):
