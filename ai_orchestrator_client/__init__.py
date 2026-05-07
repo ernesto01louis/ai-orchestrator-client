@@ -11,6 +11,7 @@ from ._errors import (
     WaitInterrupted,
     WaitTimeout,
 )
+from .async_client import AsyncOrchestratorClient
 from .models import (
     Campaign,
     CampaignAck,
@@ -37,7 +38,8 @@ __version__ = "0.0.0"
 
 __all__ = [
     "__version__",
-    # client
+    # clients
+    "AsyncOrchestratorClient",
     "OrchestratorClient",
     # auth
     "AuthProvider",
