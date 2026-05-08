@@ -4,6 +4,24 @@ All notable changes to `ai-orchestrator-client` are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [PEP 440](https://peps.python.org/pep-0440/).
 
+## [0.1.0a1] — 2026-05-08
+
+### Added
+
+- **`CampaignTemplate.hitl_mode`** field mirroring AI Orchestrator
+  Phase 3.1 (server tag `v0.3.1-phase3.1`). Optional string; valid
+  values are `full_auto` / `gate_only` / `checkpoint` /
+  `step_by_step` / `co_pilot`. Older orchestrators ignore the field;
+  newer orchestrators fall back to `full_auto` when unset, so the
+  bump is fully backwards-compatible.
+
+### Notes
+
+- The Phase 3.1 server-side `POST /runs/{run_id}/intervene` route
+  (approve / reject / edit) is reachable today via the underlying
+  `httpx.Client`; a typed `intervene_run` method on the SDK ships in
+  a follow-up.
+
 ## [0.1.0a0] — 2026-05-07
 
 First public alpha. Wraps every SDK-relevant endpoint of AI Orchestrator

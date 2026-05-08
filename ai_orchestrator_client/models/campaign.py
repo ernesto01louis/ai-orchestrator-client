@@ -50,6 +50,16 @@ class CampaignTemplate(BaseModel):
     troubleshooter_model: str | None = None
     max_iterations: int | None = None
     reference_files: list[str] | None = None
+    # Phase 3.1 HITL intervention modes (server-side feature shipped in
+    # ai-orchestrator v0.3.1). Mirrors core/campaign.py:
+    #   full_auto    — today's behaviour (only Gates blocks pause)
+    #   gate_only    — Gate denials route through HITL; otherwise auto
+    #   checkpoint   — pauses at phase boundaries
+    #   step_by_step — pauses after every LLM call (debug-only)
+    #   co_pilot     — pauses BEFORE every LLM call so prompts can be
+    #                  edited via POST /runs/{run_id}/intervene
+    # Older orchestrators ignore the field.
+    hitl_mode: str | None = None
 
 
 class CampaignCreate(BaseModel):
