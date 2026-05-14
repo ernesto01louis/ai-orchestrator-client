@@ -8,6 +8,7 @@ lockstep.
 from __future__ import annotations
 
 import pytest
+
 from ai_orchestrator_client import (
     OrchestrateRequest,
     OrchestratorError,
@@ -17,7 +18,6 @@ from ai_orchestrator_client._validators import (
     SAFE_FILENAME_PATTERN,
     validate_project_name,
 )
-
 
 VALID_NAMES = [
     "naca0012-baseline",
