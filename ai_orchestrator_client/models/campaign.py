@@ -14,6 +14,13 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from .status import CampaignStatus
 
+# NOTE: CampaignTemplate.project_name is NOT validated here on purpose.
+# Templates may contain ``{param}`` placeholders that fail the
+# SAFE_FILENAME regex pre-expansion (e.g. ``naca0012-{seed}``). The
+# server validates the expanded directory name at campaign-expansion
+# time. Single-run OrchestrateRequest.project_name IS validated
+# client-side — see ``_validators.validate_project_name``.
+
 if TYPE_CHECKING:
     from .._base import (
         DEFAULT_MAX_POLL_INTERVAL_SECONDS as _DEFAULT_MAX_POLL,
