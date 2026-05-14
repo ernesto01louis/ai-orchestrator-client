@@ -5,6 +5,7 @@ from ._errors import (
     NotFound,
     OrchestratorAPIError,
     OrchestratorError,
+    ProjectNameInvalidError,
     RunFailed,
     ServiceUnavailable,
     ValidationError,
@@ -36,7 +37,7 @@ from .models import (
 )
 from .sync_client import OrchestratorClient
 
-__version__ = "0.1.0a1"
+__version__ = "0.1.0a2"
 
 __all__ = [
     "__version__",
@@ -50,6 +51,7 @@ __all__ = [
     "NotFound",
     "OrchestratorAPIError",
     "OrchestratorError",
+    "ProjectNameInvalidError",
     "RunFailed",
     "ServiceUnavailable",
     "ValidationError",

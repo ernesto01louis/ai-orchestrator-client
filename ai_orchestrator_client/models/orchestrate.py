@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
+from .._validators import validate_project_name
 from .status import ManifestStatus
 
 
@@ -24,6 +25,11 @@ class OrchestrateRequest(BaseModel):
 
     project_name: str
     prompt: str
+
+    @field_validator("project_name")
+    @classmethod
+    def _check_project_name(cls, value: str) -> str:
+        return validate_project_name(value)
 
     planner_model: str
     # Server schema is bare `list` (untyped items). The SDK narrows to

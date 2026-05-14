@@ -96,3 +96,24 @@ class WaitInterrupted(OrchestratorError):
         )
         self.run_id = run_id
         self.last_phase = last_phase
+
+
+class ProjectNameInvalidError(OrchestratorError):
+    """``project_name`` failed the SAFE_FILENAME regex contract.
+
+    The orchestrator uses ``project_name`` as a directory name under
+    ``projects/`` and rejects anything that doesn't match
+    ``^(?!.*\\.\\.)[a-zA-Z0-9_\\-\\.]+$``. The SDK enforces the same
+    rule before the request leaves the process so consumers don't get
+    an opaque HTTP 422.
+    """
+
+    def __init__(self, name: object) -> None:
+        rendered = repr(name) if not isinstance(name, str) else f"'{name}'"
+        super().__init__(
+            f"project_name {rendered} is invalid. Allowed: letters, "
+            f"digits, '_', '-', '.'. Disallowed: spaces, slashes, '..', "
+            f"or any other punctuation. Examples of valid names: "
+            f"'naca0012-baseline', 'riblet_sweep_v3', 'run.42'."
+        )
+        self.name = name

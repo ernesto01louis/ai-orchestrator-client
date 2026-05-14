@@ -4,6 +4,28 @@ All notable changes to `ai-orchestrator-client` are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [PEP 440](https://peps.python.org/pep-0440/).
 
+## [0.1.0a2] — 2026-05-14
+
+### Added
+
+- **Client-side `project_name` validation.** `OrchestrateRequest`
+  now mirrors the server's `SAFE_FILENAME` regex
+  (`^(?!.*\.\.)[a-zA-Z0-9_\-\.]+$`) via a Pydantic
+  `field_validator`. Invalid names raise the new
+  `ProjectNameInvalidError` (subclass of `OrchestratorError`) before
+  the request leaves the process — no more opaque HTTP 422s.
+- **`ProjectNameInvalidError`** exported from
+  `ai_orchestrator_client`. Error message includes the offending
+  value and a list of valid examples.
+
+### Notes
+
+- `CampaignTemplate.project_name` is **not** validated client-side
+  because templates may legitimately contain `{param}` placeholders
+  (e.g. `naca0012-{seed}`) that fail the regex pre-expansion. The
+  server validates the expanded directory name at campaign-expansion
+  time. Audit Stage 3 §D.6.
+
 ## [0.1.0a1] — 2026-05-08
 
 ### Added
