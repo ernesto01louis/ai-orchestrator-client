@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ._errors import UnknownCapabilityError
 from .models import (
@@ -46,8 +46,13 @@ if TYPE_CHECKING:
 # Attribute the decorator stamps onto a method to mark it a capability.
 _CAPABILITY_ATTR = "_aoc_capability"
 
+# Signature-preserving TypeVar: @capability returns the decorated
+# function unchanged, so a handler keeps its own type under
+# ``mypy --strict`` (no untyped-decorator erasure).
+_F = TypeVar("_F", bound=Callable[..., Any])
 
-def capability(name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+def capability(name: str) -> Callable[[_F], _F]:
     """Mark a :class:`Consumer` method as the handler for ``name``.
 
     The decorated method is registered under the dotted capability name
@@ -55,7 +60,7 @@ def capability(name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     may be sync or async and takes a single ``payload`` dict argument.
     """
 
-    def _decorate(func: Callable[..., Any]) -> Callable[..., Any]:
+    def _decorate(func: _F) -> _F:
         setattr(func, _CAPABILITY_ATTR, name)
         return func
 

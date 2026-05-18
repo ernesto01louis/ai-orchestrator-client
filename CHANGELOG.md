@@ -4,6 +4,16 @@ All notable changes to `ai-orchestrator-client` are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [PEP 440](https://peps.python.org/pep-0440/).
 
+## [0.1.1] — 2026-05-18
+
+### Fixed
+
+- **`@capability` is now signature-preserving.** The decorator returned
+  `Callable[..., Any]`, which erased the decorated handler's type and
+  tripped `untyped-decorator` under `mypy --strict` in consumer
+  projects. It now uses a bound `TypeVar` and returns the function
+  unchanged.
+
 ## [0.1.0] — 2026-05-18
 
 First stable release. SemVer applies from here — the public surface
