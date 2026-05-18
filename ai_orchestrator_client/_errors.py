@@ -98,6 +98,19 @@ class WaitInterrupted(OrchestratorError):
         self.last_phase = last_phase
 
 
+class UnknownCapabilityError(OrchestratorError):
+    """A :class:`~ai_orchestrator_client.Consumer` was asked to dispatch
+    a capability it does not implement.
+
+    Raised by ``Consumer.dispatch`` (client-side) — distinct from the
+    server's 404 when no *registered* consumer offers a capability.
+    """
+
+    def __init__(self, capability: str) -> None:
+        super().__init__(f"consumer has no capability '{capability}'")
+        self.capability = capability
+
+
 class ProjectNameInvalidError(OrchestratorError):
     """``project_name`` failed the SAFE_FILENAME regex contract.
 

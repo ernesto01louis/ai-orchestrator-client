@@ -14,8 +14,7 @@ having to know the HTTP surface.
 ## Install
 
 ```bash
-# 0.1.0a0 is a pre-release — `--pre` is required until 0.1.0 final ships.
-pip install --pre ai-orchestrator-client
+pip install ai-orchestrator-client
 ```
 
 Python 3.11+. Wraps the orchestrator's HTTP API + `/ws` log stream;
@@ -113,9 +112,42 @@ client = OrchestratorClient(base_url=..., auth=BearerTokenAuth(token))
 | Evidence (`get_evidence`, `download_evidence_crate`, `refresh_evidence`) | ✓ | ✓ |
 | `Campaign.iter_runs(client)` streaming with empty-`runs[]` race guard | ✓ | ✓ |
 | Live log streaming via `/ws` (`iter_logs`) | — | ✓ |
+| Consumer registry (`register_consumer`, `list_consumers`, `get_consumer`, `deregister_consumer`, `consumer_heartbeat`) | ✓ | ✓ |
+| Capability dispatch (`invoke_capability`) | ✓ | ✓ |
+| Consumer data-plane push (`write_memory`, `write_vault_note`, `send_notification`, `push_evidence`) | ✓ | ✓ |
+| `Consumer` base + `@capability` + `dispatch()` (framework-free) | ✓ | ✓ |
+| `Hindsight` / `Vault` / `Ntfy` thin push clients | ✓ | — |
 | Bearer-token auth hooks (no-op until orchestrator Phase 1.7 ships token auth) | ✓ | ✓ |
 | Typed Pydantic models for every endpoint | ✓ | ✓ |
 | OpenAPI drift fixture protecting wire-format mirrors | n/a | n/a |
+
+### Registering as a consumer (Phase 3.6)
+
+An external project registers with the orchestrator, declares
+capabilities, and exposes handlers the orchestrator can dispatch work to:
+
+```python
+from ai_orchestrator_client import Consumer, capability, OrchestratorClient
+
+class RfdfConsumer(Consumer):
+    name = "rfdf"
+
+    @capability("rf.doa.run")
+    async def run_doa(self, payload: dict) -> dict:
+        ...  # delegate to your platform
+
+with OrchestratorClient(base_url="http://orchestrator.lan:8000") as client:
+    consumer = RfdfConsumer()
+    consumer.register(client, base_url="http://rfdf.lan:8000",
+                      callback_token="…",
+                      extra_capabilities=["memory.write"])
+
+# In your own POST /capabilities/{cap} handler:
+result = await consumer.dispatch(cap, payload)
+```
+
+`Consumer` imports no web framework — wire `dispatch()` into whatever
+HTTP server the consumer project already runs.
 
 ## Errors
 

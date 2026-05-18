@@ -35,10 +35,18 @@ from .models import (
     CampaignCreate,
     CampaignTreeView,
     CampaignVerifyResult,
+    CapabilityInvokeResult,
+    ConsumerAck,
+    ConsumerRecord,
+    ConsumerRegistration,
+    EvidencePush,
+    MemoryWrite,
+    Notification,
     OrchestrateAck,
     OrchestrateRequest,
     RunStatus,
     RunVerifyResult,
+    VaultNote,
 )
 
 
@@ -303,3 +311,92 @@ class OrchestratorClient:
             elif stop_event.wait(wait_for):
                 raise WaitInterrupted(run_id, status.phase)
             interval = min(interval * 1.5, max_poll_interval)
+
+    # ----- consumer registry (Phase 3.6) ------------------------------
+
+    def register_consumer(self, reg: ConsumerRegistration) -> ConsumerAck:
+        """Register (or upsert) an external consumer with the orchestrator."""
+        resp = self._request(
+            "POST", "/consumers/register", json=reg.model_dump(exclude_none=False)
+        )
+        return ConsumerAck.model_validate(resp.json())
+
+    def list_consumers(self) -> list[ConsumerRecord]:
+        """List registered consumers (the capability-discovery surface)."""
+        body: dict[str, Any] = self._request("GET", "/consumers").json()
+        items = body.get("consumers", []) if isinstance(body, dict) else body
+        return [ConsumerRecord.model_validate(c) for c in items]
+
+    def get_consumer(self, consumer_id: str) -> ConsumerRecord:
+        """Fetch one registered consumer's record."""
+        resp = self._request("GET", f"/consumers/{consumer_id}")
+        return ConsumerRecord.model_validate(resp.json())
+
+    def deregister_consumer(self, consumer_id: str) -> dict[str, Any]:
+        """Remove a consumer from the registry."""
+        result: dict[str, Any] = self._request(
+            "DELETE", f"/consumers/{consumer_id}"
+        ).json()
+        return result
+
+    def consumer_heartbeat(self, consumer_id: str) -> dict[str, Any]:
+        """Send a liveness ping for a registered consumer."""
+        result: dict[str, Any] = self._request(
+            "POST", f"/consumers/{consumer_id}/heartbeat"
+        ).json()
+        return result
+
+    def invoke_capability(
+        self, capability: str, payload: dict[str, Any] | None = None
+    ) -> CapabilityInvokeResult:
+        """Dispatch a capability call to whichever consumer offers it."""
+        resp = self._request(
+            "POST",
+            f"/capabilities/{capability}/invoke",
+            json={"payload": payload or {}},
+        )
+        return CapabilityInvokeResult.model_validate(resp.json())
+
+    # ----- consumer data-plane push (Phase 3.6) -----------------------
+
+    def write_memory(self, consumer_id: str, content: str) -> dict[str, Any]:
+        """Push a Hindsight memory entry on behalf of a consumer."""
+        result: dict[str, Any] = self._request(
+            "POST",
+            f"/consumers/{consumer_id}/memory",
+            json=MemoryWrite(content=content).model_dump(),
+        ).json()
+        return result
+
+    def write_vault_note(
+        self, consumer_id: str, note: VaultNote
+    ) -> dict[str, Any]:
+        """Write an L5 vault note on behalf of a consumer."""
+        result: dict[str, Any] = self._request(
+            "POST",
+            f"/consumers/{consumer_id}/vault",
+            json=note.model_dump(),
+        ).json()
+        return result
+
+    def send_notification(
+        self, consumer_id: str, notification: Notification
+    ) -> dict[str, Any]:
+        """Fire an ntfy/Gotify notification on behalf of a consumer."""
+        result: dict[str, Any] = self._request(
+            "POST",
+            f"/consumers/{consumer_id}/notify",
+            json=notification.model_dump(exclude_none=False),
+        ).json()
+        return result
+
+    def push_evidence(
+        self, consumer_id: str, evidence: EvidencePush
+    ) -> dict[str, Any]:
+        """Persist a consumer-produced evidence bundle on the orchestrator."""
+        result: dict[str, Any] = self._request(
+            "POST",
+            f"/consumers/{consumer_id}/evidence",
+            json=evidence.model_dump(exclude_none=False),
+        ).json()
+        return result

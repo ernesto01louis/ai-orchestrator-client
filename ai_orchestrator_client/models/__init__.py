@@ -18,6 +18,17 @@ from .campaign import (
     CampaignTreeRun,
     CampaignTreeView,
 )
+from .consumers import (
+    CapabilityInvokeResult,
+    ConsumerAck,
+    ConsumerRecord,
+    ConsumerRegistration,
+    EvidencePush,
+    HealthReport,
+    MemoryWrite,
+    Notification,
+    VaultNote,
+)
 from .events import LogEvent, StatusEvent
 from .orchestrate import (
     OrchestrateAck,
@@ -40,8 +51,16 @@ __all__ = [
     "CampaignTreeRun",
     "CampaignTreeView",
     "CampaignVerifyResult",
+    "CapabilityInvokeResult",
+    "ConsumerAck",
+    "ConsumerRecord",
+    "ConsumerRegistration",
+    "EvidencePush",
+    "HealthReport",
     "LogEvent",
     "ManifestStatus",
+    "MemoryWrite",
+    "Notification",
     "OrchestrateAck",
     "OrchestrateRequest",
     "OrchestrateResult",
@@ -50,4 +69,5 @@ __all__ = [
     "RunVerifyResult",
     "RunningResult",
     "StatusEvent",
+    "VaultNote",
 ]

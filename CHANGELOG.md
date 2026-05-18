@@ -4,6 +4,42 @@ All notable changes to `ai-orchestrator-client` are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [PEP 440](https://peps.python.org/pep-0440/).
 
+## [0.1.0] — 2026-05-18
+
+First stable release. SemVer applies from here — the public surface
+(`OrchestratorClient`, `AsyncOrchestratorClient`, `Consumer`, the
+models, the error hierarchy) is stable within `0.1.x`.
+
+### Added
+
+- **Consumer registry (Phase 3.6).** Both clients gain
+  `register_consumer`, `list_consumers`, `get_consumer`,
+  `deregister_consumer`, `consumer_heartbeat`, and `invoke_capability`
+  for the orchestrator's external-consumer registry + capability
+  dispatch endpoints.
+- **Consumer data-plane push.** `write_memory`, `write_vault_note`,
+  `send_notification`, `push_evidence` push Hindsight memory, L5 vault
+  notes, ntfy alerts, and consumer-schema evidence bundles into the
+  orchestrator.
+- **`Consumer` base class + `@capability` decorator.** A
+  framework-free way to declare capabilities and dispatch calls — the
+  registry is built per subclass, `dispatch()` routes to sync or async
+  handlers, `register()` / `to_registration()` produce the
+  registration payload. No web-framework import; the consumer project
+  wires `dispatch()` into its own HTTP server.
+- **`Hindsight` / `Vault` / `Ntfy` thin clients** — push helpers bound
+  to a single consumer id.
+- **Models**: `ConsumerRegistration`, `ConsumerRecord`, `ConsumerAck`,
+  `CapabilityInvokeResult`, `MemoryWrite`, `VaultNote`, `Notification`,
+  `EvidencePush`, `HealthReport`.
+- **`UnknownCapabilityError`** — raised by `Consumer.dispatch` for an
+  unhandled capability.
+
+### Changed
+
+- First non-prerelease version — `pip install ai-orchestrator-client`
+  no longer needs `--pre`.
+
 ## [0.1.0a2] — 2026-05-14
 
 ### Added
