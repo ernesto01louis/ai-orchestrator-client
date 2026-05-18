@@ -8,11 +8,13 @@ from ._errors import (
     ProjectNameInvalidError,
     RunFailed,
     ServiceUnavailable,
+    UnknownCapabilityError,
     ValidationError,
     WaitInterrupted,
     WaitTimeout,
 )
 from .async_client import AsyncOrchestratorClient
+from .consumer import Consumer, Hindsight, Ntfy, Vault, capability
 from .models import (
     Campaign,
     CampaignAck,
@@ -24,8 +26,16 @@ from .models import (
     CampaignTreeRun,
     CampaignTreeView,
     CampaignVerifyResult,
+    CapabilityInvokeResult,
+    ConsumerAck,
+    ConsumerRecord,
+    ConsumerRegistration,
+    EvidencePush,
+    HealthReport,
     LogEvent,
     ManifestStatus,
+    MemoryWrite,
+    Notification,
     OrchestrateAck,
     OrchestrateRequest,
     OrchestrateResult,
@@ -34,6 +44,7 @@ from .models import (
     RunStatus,
     RunVerifyResult,
     StatusEvent,
+    VaultNote,
 )
 from .sync_client import OrchestratorClient
 
@@ -47,6 +58,12 @@ __all__ = [
     # auth
     "AuthProvider",
     "BearerTokenAuth",
+    # consumer integration (Phase 3.6)
+    "Consumer",
+    "Hindsight",
+    "Ntfy",
+    "Vault",
+    "capability",
     # errors
     "NotFound",
     "OrchestratorAPIError",
@@ -54,6 +71,7 @@ __all__ = [
     "ProjectNameInvalidError",
     "RunFailed",
     "ServiceUnavailable",
+    "UnknownCapabilityError",
     "ValidationError",
     "WaitInterrupted",
     "WaitTimeout",
@@ -68,8 +86,16 @@ __all__ = [
     "CampaignTreeRun",
     "CampaignTreeView",
     "CampaignVerifyResult",
+    "CapabilityInvokeResult",
+    "ConsumerAck",
+    "ConsumerRecord",
+    "ConsumerRegistration",
+    "EvidencePush",
+    "HealthReport",
     "LogEvent",
     "ManifestStatus",
+    "MemoryWrite",
+    "Notification",
     "OrchestrateAck",
     "OrchestrateRequest",
     "OrchestrateResult",
@@ -78,4 +104,5 @@ __all__ = [
     "RunVerifyResult",
     "RunningResult",
     "StatusEvent",
+    "VaultNote",
 ]
